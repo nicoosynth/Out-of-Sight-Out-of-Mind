@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Add a raster image to a map layer</title>
+<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+<style>
+body { margin: 0; padding: 0; }
+#map { position: absolute; top: 0; bottom: 0; width: 100%; }
+</style>
+</head>
+<body>
+<script src="https://unpkg.com/three@0.126.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+
+<style>
+    .mapboxgl-popup {
+        max-width: 200px;
+    }
+</style>
+
+<div id="map"></div>
+
+<audio id="audio1" src="1_stereo_Zugangsstollen_Windabzug & Wassertropfen.WAV"></audio>
+<audio id="audio2" src="2_stereo_oberaar dam_seepage water loud metal sounds.WAV"></audio>
+<audio id="audio3" src="3_geofon_oberaar dam_water drops in metal.WAV"></audio>
+<audio id="audio4" src="4_geofon_turbine_konstanter Lärm3.WAV"></audio>
+<audio id="audio5" src="5_stereo_tunnel_ventilation machine.WAV"></audio>
+<audio id="audio6" src="6_stereo_Zugangsstollen_Windabzug & Athmospheric.WAV"></audio>
+<audio id="audio7" src="7_geofon_Apparatenkammer_metal sounds.wav"></audio>
+<audio id="audio8" src="8_geofon_Apparatenkammer_komplett mit Wasser gefülltes Metallrohr.wav"></audio>
+<audio id="audio9" src="9_geofon_Zugangsstollen_Stahltür Apparatenkammer.wav"></audio>
+<audio id="audio10" src="10_stereo_Fuge_one hour recording.WAV"></audio>
+<audio id="audio11" src="11_geofon_turbine_konstanter Lärm.wav"></audio>
+<audio id="audio12" src="12_shooter_turbine_konstanter Lärm.wav"></audio>
+
+<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1Ijoibmljb2xhc3NlaWxlciIsImEiOiJjbHhnazFjanAxMnQ5MnFxenBya2ZkYnU4In0.mZr6Y4z-1aAOVhyddXURlA';
+
+    const map = new mapboxgl.Map({
+        container: 'map',
+        maxZoom: 20,
+        minZoom: 4,
+        zoom: 15,
+        center: [5.447753, 51.454189],
+        // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+        style: 'mapbox://styles/nicolasseiler/clxvg8nfw009e01pfbylmcc45',
+        // interactive: false
+    });
+
+
+    map.on('load', () => {
+        map.addLayer({
+            'id': '3d-buildings',
+            'source': 'composite',
+            'source-layer': 'building',
+            'filter': ['==', 'extrude', 'true'],
+            'type': 'fill-extrusion',
+            'minzoom': 16,
+            'paint': {
+                'fill-extrusion-color': '#aaa',
+                'fill-extrusion-height': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    16,
+                    0,
+                    16.05,
+                    ['get', 'height']
+                ],
+                'fill-extrusion-base': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    16,
+                    0,
+                    16.05,
+                    ['get', 'min_height']
+                ],
+                'fill-extrusion-opacity': 0.6
+            }
+        });
+
+
+        const gpxData = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="GPS Visualizer Sandbox https://www.gpsvisualizer.com/draw/" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+	<trk>
+		<name></name>
+		<desc>Length: 0.779 km (0.484 mi)</desc>
+		<trkseg>
+			<trkpt lat="51.4422697" lon="5.4846346"></trkpt>
+			<trkpt lat="51.4422162" lon="5.4839694"></trkpt>
+			<trkpt lat="51.4422162" lon="5.4834974"></trkpt>
+			<trkpt lat="51.4422362" lon="5.4830575"></trkpt>
+			<trkpt lat="51.4422697" lon="5.482564"></trkpt>
+			<trkpt lat="51.4421292" lon="5.4818559"></trkpt>
+			<trkpt lat="51.4421493" lon="5.4814589"></trkpt>
+			<trkpt lat="51.4420891" lon="5.4809225"></trkpt>
+			<trkpt lat="51.4420222" lon="5.4805362"></trkpt>
+			<trkpt lat="51.4419954" lon="5.4800856"></trkpt>
+			<trkpt lat="51.4419686" lon="5.4795599"></trkpt>
+			<trkpt lat="51.4418549" lon="5.4788947"></trkpt>
+			<trkpt lat="51.4418081" lon="5.4784012"></trkpt>
+			<trkpt lat="51.4417478" lon="5.4780364"></trkpt>
+			<trkpt lat="51.4417278" lon="5.4776716"></trkpt>
+			<trkpt lat="51.4417077" lon="5.4773176"></trkpt>
+			<trkpt lat="51.4416274" lon="5.4770601"></trkpt>
+			<trkpt lat="51.4415739" lon="5.4768455"></trkpt>
+			<trkpt lat="51.4415605" lon="5.4764915"></trkpt>
+			<trkpt lat="51.441507" lon="5.4762554"></trkpt>
+			<trkpt lat="51.4413732" lon="5.4760087"></trkpt>
+			<trkpt lat="51.4412059" lon="5.4758263"></trkpt>
+			<trkpt lat="51.4409918" lon="5.4756868"></trkpt>
+			<trkpt lat="51.4407509" lon="5.475558"></trkpt>
+			<trkpt lat="51.440403" lon="5.4754186"></trkpt>
+			<trkpt lat="51.440209" lon="5.4753327"></trkpt>
+			<trkpt lat="51.4399949" lon="5.4752791"></trkpt>
+		</trkseg>
+	</trk>
+</gpx>
+`
+
+
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(gpxData, "text/xml");
+
+        const trkpts = xmlDoc.getElementsByTagName("trkpt");
+
+        const points = Array.from(trkpts).map(pt => [
+        parseFloat(pt.getAttribute("lat")),
+        parseFloat(pt.getAttribute("lon"))
+        ]);
+
+        console.log(`points:`)
+        console.log(points);
+
+
+        const animationDuration = 100000;
+        const cameraAltitude = 100;
+        // get the overall distance of each route so we can interpolate along them
+        const cameraRouteDistance = turf.lineDistance(
+            turf.lineString(points)
+        );
+
+        let start;
+
+        function frame(time) {
+            if (!start) start = time;
+            // phase determines how far through the animation we are
+            const phase = (time - start) / animationDuration;
+
+            // phase is normalized between 0 and 1
+            // when the animation is finished, reset start to loop the animation
+            if (phase > 1) {
+                // wait 1.5 seconds before looping
+                setTimeout(() => {
+                    start = 0.0;
+                }, 1500);
+            }
+
+            // use the phase to get a point that is the appropriate distance along the route
+            // this approach syncs the camera and route positions ensuring they move
+            // at roughly equal rates even if they don't contain the same number of points
+            const alongCamera = turf.along(
+                turf.lineString(points),
+                cameraRouteDistance * phase
+            ).geometry.coordinates;
+            const alongLookAt = turf.along(
+                turf.lineString(points),
+                cameraRouteDistance * (phase + 0.4)
+            ).geometry.coordinates;
+
+            const camera = map.getFreeCameraOptions();
+
+            // set the position and altitude of the camera
+            camera.position = mapboxgl.MercatorCoordinate.fromLngLat(
+                {
+                    lat: alongCamera[0],
+                    lng: alongCamera[1]
+                },
+                cameraAltitude
+            );
+
+
+            camera.lookAtPoint({
+                // lat: alongCamera[0] + 0.0015,
+                // lng: alongCamera[1] + 0.0015
+                lat: alongLookAt[0],
+                lng: alongLookAt[1]
+            });
+            console.log("%f\t%f\t%f", phase, alongCamera[0], alongCamera[1])
+
+            map.setFreeCameraOptions(camera);
+
+            window.requestAnimationFrame(frame);
+        }
+
+        //window.requestAnimationFrame(frame);
+
+    });
+
+    map.addControl(new mapboxgl.FullscreenControl());
+
+    const recording1 = [5.453740, 51.465725];
+    const recording2 = [5.419894, 51.397920];
+    const recording3 = [5.415689, 51.399160];
+    const recording4 = [5.464707, 51.411401];
+    const recording5 = [5.456824, 51.467184];
+    const recording6 = [5.443038, 51.459531];
+    const recording7 = [5.446264, 51.459818];
+    const recording8 = [5.443130, 51.459490];
+    const recording9 = [5.475028, 51.440199];
+    const recording10 = [5.474736, 51.43974];
+    const recording11 = [5.469282, 51.418032];
+    const recording12 = [5.485528, 51.427554];
+
+    const popup1 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>1</h1>`
+    );
+    const popup2 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>2</h1>`
+    );
+    const popup3 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>3</h1>`
+    );
+    const popup4 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>4</h1>`
+    );
+    const popup5 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>5</h1>`
+    );
+    const popup6 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>6</h1>`
+    );
+    const popup7 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>7</h1>`
+    );
+    const popup8 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>8</h1>`
+    );
+    const popup9 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>9</h1>`
+    );
+    const popup10 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>10</h1>`
+    );
+    const popup11 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>11</h1>`
+    );
+    const popup12 = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        `<h1>12</h1>`
+    );
+
+    // create the marker
+    const myMarker1 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording1)
+        .setPopup(popup1) // sets a popup on this marker
+        .addTo(map);
+    const myMarker2 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording2)
+        .setPopup(popup2) // sets a popup on this marker
+        .addTo(map);
+    const myMarker3 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording3)
+        .setPopup(popup3) // sets a popup on this marker
+        .addTo(map);
+    const myMarker4 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording4)
+        .setPopup(popup4) // sets a popup on this marker
+        .addTo(map);
+    const myMarker5 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording5)
+        .setPopup(popup5) // sets a popup on this marker
+        .addTo(map);
+    const myMarker6 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording6)
+        .setPopup(popup6) // sets a popup on this marker
+        .addTo(map);
+    const myMarker7 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording7)
+        .setPopup(popup7) // sets a popup on this marker
+        .addTo(map);
+    const myMarker8 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording8)
+        .setPopup(popup8) // sets a popup on this marker
+        .addTo(map);
+    const myMarker9 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording9)
+        .setPopup(popup9) // sets a popup on this marker
+        .addTo(map);
+    const myMarker10 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording10)
+        .setPopup(popup10) // sets a popup on this marker
+        .addTo(map);
+    const myMarker11 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording11)
+        .setPopup(popup11) // sets a popup on this marker
+        .addTo(map);
+    const myMarker12 = new mapboxgl.Marker({ color: "#00CDFF"})
+        .setLngLat(recording12)
+        .setPopup(popup12) // sets a popup on this marker
+        .addTo(map);
+
+    // Function to fade in audio
+    function fadeIn(audio) {
+        let volume = 0;
+        audio.volume = volume;
+        audio.play();
+
+        const fadeInInterval = setInterval(() => {
+            if (volume < 1) {
+                volume += 0.1;
+                audio.volume = volume;
+            } else {
+                clearInterval(fadeInInterval);
+            }
+        }, 100); // Increase volume every 100ms
+    }
+
+    // Function to fade out audio
+    function fadeOut(audio) {
+        let volume = 1;
+        const fadeOutInterval = setInterval(() => {
+            if (volume > 0) {
+                volume -= 0.1;
+                audio.volume = volume;
+            } else {
+                clearInterval(fadeOutInterval);
+                audio.pause();
+                audio.currentTime = 0; // Reset the audio to the beginning
+            }
+        }, 100); // Decrease volume every 100ms
+    }
+    
+    // Function to play audio
+    function playAudio1() {
+        const audio = document.getElementById('audio1');
+        fadeIn(audio)
+    }
+    function playAudio2() {
+        const audio = document.getElementById('audio2');
+        fadeIn(audio)
+    }
+    function playAudio3() {
+        const audio = document.getElementById('audio3');
+        console.log(audio)
+        fadeIn(audio)
+    }
+    function playAudio4() {
+        const audio = document.getElementById('audio4');
+        fadeIn(audio)
+    }
+    function playAudio5() {
+        const audio = document.getElementById('audio5');
+        fadeIn(audio)
+    }
+    function playAudio6() {
+        const audio = document.getElementById('audio6');
+        console.log(audio)
+        fadeIn(audio)
+    }
+    function playAudio7() {
+        const audio = document.getElementById('audio7');
+        fadeIn(audio)
+    }
+    function playAudio8() {
+        const audio = document.getElementById('audio8');
+        fadeIn(audio)
+    }
+    function playAudio9() {
+        const audio = document.getElementById('audio9');
+        console.log(audio)
+        fadeIn(audio)
+    }
+    function playAudio10() {
+        const audio = document.getElementById('audio10');
+        fadeIn(audio)
+    }
+    function playAudio11() {
+        const audio = document.getElementById('audio11');
+        fadeIn(audio)
+    }
+    function playAudio12() {
+        const audio = document.getElementById('audio12');
+        console.log(audio)
+        fadeIn(audio)
+    }
+
+    // Function to stop audio
+    function stopAudio1() {
+        const audio = document.getElementById('audio1');
+        fadeOut(audio)
+    }
+    function stopAudio2() {
+        const audio = document.getElementById('audio2');
+        fadeOut(audio)
+    }
+    function stopAudio3() {
+        const audio = document.getElementById('audio3');
+        fadeOut(audio)
+    }
+    function stopAudio4() {
+        const audio = document.getElementById('audio4');
+        fadeOut(audio)
+    }
+    function stopAudio5() {
+        const audio = document.getElementById('audio5');
+        fadeOut(audio)
+    }
+    function stopAudio6() {
+        const audio = document.getElementById('audio6');
+        fadeOut(audio)
+    }
+    function stopAudio7() {
+        const audio = document.getElementById('audio7');
+        fadeOut(audio)
+    }
+    function stopAudio8() {
+        const audio = document.getElementById('audio8');
+        fadeOut(audio)
+    }
+    function stopAudio9() {
+        const audio = document.getElementById('audio9');
+        fadeOut(audio)
+    }
+    function stopAudio10() {
+        const audio = document.getElementById('audio10');
+        fadeOut(audio)
+    }
+    function stopAudio11() {
+        const audio = document.getElementById('audio11');
+        fadeOut(audio)
+    }
+    function stopAudio12() {
+        const audio = document.getElementById('audio12');
+        fadeOut(audio)
+    }
+
+    // Add event listener to the marker
+    myMarker1.getElement().addEventListener('click', playAudio1);
+    myMarker2.getElement().addEventListener('click', playAudio2);
+    myMarker3.getElement().addEventListener('click', playAudio3);
+    myMarker4.getElement().addEventListener('click', playAudio4);
+    myMarker5.getElement().addEventListener('click', playAudio5);
+    myMarker6.getElement().addEventListener('click', playAudio6);
+    myMarker7.getElement().addEventListener('click', playAudio7);
+    myMarker8.getElement().addEventListener('click', playAudio8);
+    myMarker9.getElement().addEventListener('click', playAudio9);
+    myMarker10.getElement().addEventListener('click', playAudio10);
+    myMarker11.getElement().addEventListener('click', playAudio11);
+    myMarker12.getElement().addEventListener('click', playAudio12);
+
+    // Add event listener to the popup
+    popup1.on('close', stopAudio1);
+    popup2.on('close', stopAudio2);
+    popup3.on('close', stopAudio3);
+    popup4.on('close', stopAudio4);
+    popup5.on('close', stopAudio5);
+    popup6.on('close', stopAudio6);
+    popup7.on('close', stopAudio7);
+    popup8.on('close', stopAudio8);
+    popup9.on('close', stopAudio9);
+    popup10.on('close', stopAudio10);
+    popup11.on('close', stopAudio11);
+    popup12.on('close', stopAudio12);
+
+    // parameters to ensure the model is georeferenced correctly on the map
+    const modelOrigin = [5.475207, 51.439893];
+    const modelAltitude = 0;
+    const modelRotate = [Math.PI / 2, 0, 0];
+
+    const modelAsMercatorCoordinate = mapboxgl.MercatorCoordinate.fromLngLat(
+        modelOrigin,
+        modelAltitude
+    );
+
+    // transformation parameters to position, rotate and scale the 3D model onto the map
+    const modelTransform = {
+        translateX: modelAsMercatorCoordinate.x,
+        translateY: modelAsMercatorCoordinate.y,
+        translateZ: modelAsMercatorCoordinate.z,
+        rotateX: modelRotate[0],
+        rotateY: modelRotate[1],
+        rotateZ: modelRotate[2],
+        /* Since the 3D model is in real world meters, a scale transform needs to be
+         * applied since the CustomLayerInterface expects units in MercatorCoordinates.
+         */
+        scale: modelAsMercatorCoordinate.meterInMercatorCoordinateUnits()
+    };
+
+    const THREE = window.THREE;
+
+    // configuration of the custom layer for a 3D model per the CustomLayerInterface
+    const customLayer = {
+        id: '3d-model',
+        type: 'custom',
+        renderingMode: '3d',
+        onAdd: function (map, gl) {
+            this.camera = new THREE.Camera();
+            this.scene = new THREE.Scene();
+
+            // create two three.js lights to illuminate the model
+            const directionalLight = new THREE.DirectionalLight(0xffffff);
+            directionalLight.position.set(0, -70, 100).normalize();
+            this.scene.add(directionalLight);
+
+            const directionalLight2 = new THREE.DirectionalLight(0xffffff);
+            directionalLight2.position.set(0, 70, 100).normalize();
+            this.scene.add(directionalLight2);
+
+            // use the three.js GLTF loader to add the 3D model to the three.js scene
+            const loader = new THREE.GLTFLoader();
+            loader.load(
+                'hydropowermodel_level.glb',
+                (gltf) => {
+                    const groundLevel = modelAsMercatorCoordinate.z; // Assuming ground level in Mercator coordinates
+
+                    gltf.scene.traverse((node) => {
+                        if (node.isMesh) {
+                            const vertices = node.geometry.attributes.position.array;
+                            const vertexCount = vertices.length / 3;
+
+                            for (let i = 0; i < vertexCount; i++) {
+                                const z = vertices[i * 3 + 2]; // Z coordinate of the vertex
+
+                                if (z < groundLevel) {
+                                    node.material = new THREE.MeshPhongMaterial({
+                                        color: 0xff0000, // Red for below ground
+                                        opacity: 0.5,
+                                        transparent: true
+                                    });
+                                } else {
+                                    node.material = new THREE.MeshPhongMaterial({
+                                        color: 0x00ff00, // Green for above ground
+                                        opacity: 0.5,
+                                        transparent: true
+                                    });
+                                }
+                            }
+                        }
+                    });
+
+                    this.scene.add(gltf.scene);
+                }
+            );
+            this.map = map;
+
+            // use the Mapbox GL JS map canvas for three.js
+            this.renderer = new THREE.WebGLRenderer({
+                canvas: map.getCanvas(),
+                context: gl,
+                antialias: true
+            });
+
+            this.renderer.autoClear = false;
+        },
+        render: function (gl, matrix) {
+            const rotationX = new THREE.Matrix4().makeRotationAxis(
+                new THREE.Vector3(1, 0, 0),
+                modelTransform.rotateX
+            );
+            const rotationY = new THREE.Matrix4().makeRotationAxis(
+                new THREE.Vector3(0, 1, 0),
+                modelTransform.rotateY
+            );
+            const rotationZ = new THREE.Matrix4().makeRotationAxis(
+                new THREE.Vector3(0, 0, 1),
+                modelTransform.rotateZ
+            );
+
+            const m = new THREE.Matrix4().fromArray(matrix);
+            const l = new THREE.Matrix4()
+                .makeTranslation(
+                    modelTransform.translateX,
+                    modelTransform.translateY,
+                    modelTransform.translateZ
+                )
+                .scale(
+                    new THREE.Vector3(
+                        modelTransform.scale,
+                        -modelTransform.scale,
+                        modelTransform.scale
+                    )
+                )
+                .multiply(rotationX)
+                .multiply(rotationY)
+                .multiply(rotationZ);
+
+            this.camera.projectionMatrix = m.multiply(l);
+            this.renderer.resetState();
+            this.renderer.render(this.scene, this.camera);
+            this.map.triggerRepaint();
+        }
+    };
+
+    map.on('style.load', () => {
+        map.addLayer(customLayer, 'waterway-label');
+    });
+
+</script>
+
+</body>
+</html>
+
